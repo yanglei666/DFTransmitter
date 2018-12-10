@@ -1,0 +1,10 @@
+"STARTUP.obj",
+"Common.obj",
+"Key.obj",
+"LED.obj",
+"Uart1.obj",
+"Timer.obj",
+"EEPROM.obj",
+"main.obj" 
+TO "DogfenceTransmitter" 
+RAMSIZE(256) 

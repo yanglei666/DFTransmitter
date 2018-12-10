@@ -1,0 +1,110 @@
+C51 COMPILER V9.01   LED                                                                   12/09/2018 10:48:22 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE LED
+OBJECT MODULE PLACED IN LED.OBJ
+COMPILER INVOKED BY: E:\Keil_v4\C51\BIN\C51.EXE LED.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include"LED.h"
+   2          unsigned char code LED[]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f,0x77,0x7c,0x39,0x5e,0x79,0x71,
+             -0x73,0x00};
+   3          
+   4          sbit SER = P1^4;    //p3.4脚控制串行数据输入
+   5          sbit SCK = P1^5;    //串行输入时钟
+   6          sbit RCK = P4^4;    //锁存输入时钟
+   7          
+   8          void DigLEDInit()
+   9          {
+  10   1         //初始化拉低信号
+  11   1         SER = 0;    
+  12   1         SCK = 0;    
+  13   1         RCK = 0;
+  14   1      }
+  15          void WriteLEDData8(unsigned char nData,bit bIsShi)
+  16          {
+  17   1              char i=0;
+  18   1              //先确定是十位还是个位
+  19   1                      if(bIsShi)
+  20   1                      {
+  21   2                        SER = 1;               
+  22   2                SCK = 1;           //上升沿，让串行输入时钟变为高电平，并延时2个时钟周期        
+  23   2                        _nop_();
+  24   2                _nop_();
+  25   2                 SCK = 0;          //变为低电平，为下次准备 
+  26   2                        _nop_();
+  27   2                _nop_();
+  28   2      
+  29   2                        SER = 0;               
+  30   2                SCK = 1;          //上升沿，让串行输入时钟变为高电平，并延时2个时钟周期        
+  31   2                        _nop_();
+  32   2                _nop_();
+  33   2                 SCK = 0;          //变为低电平，为下次准备 
+  34   2                        _nop_();
+  35   2                _nop_();
+  36   2                      }
+  37   1                      else
+  38   1                      {
+  39   2                        SER = 0;               
+  40   2                SCK = 1;           //上升沿，让串行输入时钟变为高电平，并延时2个时钟周期        
+  41   2                        _nop_();
+  42   2                _nop_();
+  43   2                 SCK = 0;          //变为低电平，为下次准备 
+  44   2                        _nop_();
+  45   2                _nop_();
+  46   2      
+  47   2                        SER = 1;               
+  48   2                SCK = 1;          //上升沿，让串行输入时钟变为高电平，并延时2个时钟周期        
+  49   2                        _nop_();
+  50   2                _nop_();
+  51   2                 SCK = 0;          //变为低电平，为下次准备 
+  52   2                        _nop_();
+  53   2                _nop_();
+  54   2                      }
+C51 COMPILER V9.01   LED                                                                   12/09/2018 10:48:22 PAGE 2   
+
+  55   1      
+  56   1                      //发送数据
+  57   1                  for(;i<8;i++)
+  58   1                 {
+  59   2                      SER  = nData>>7;         //大家自己考量这2句
+  60   2                      nData= nData<<1;      
+  61   2              
+  62   2                      SCK = 1;          //上升沿，让串行输入时钟变为高电平，并延时2个时钟周期        
+  63   2                              _nop_();
+  64   2                      _nop_();
+  65   2                      SCK = 0;          //变为低电平，为下次准备
+  66   2                              _nop_();
+  67   2                      _nop_();   
+  68   2                 }  
+  69   1                 
+  70   1                 /*位移寄存器数据准备完毕,转移到存储寄存器*/
+  71   1                 RCK = 1;         //上升沿，让存储寄存器时钟变为高电平，并延时2个时钟周期   
+  72   1                 _nop_();
+  73   1                 _nop_();
+  74   1                 RCK = 0;
+  75   1                 SER = 0; 
+  76   1      }
+  77          
+  78          void WriteLEDData16(unsigned char nShiData,unsigned char nGeData)
+  79          {
+  80   1                WriteLEDData8(LED[nShiData],1);
+  81   1                delay_ms(1);
+  82   1                WriteLEDData8(LED[nGeData],0);
+  83   1                delay_ms(1);
+  84   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    128    ----
+   CONSTANT SIZE    =     18    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       1
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       1
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

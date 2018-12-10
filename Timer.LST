@@ -1,0 +1,86 @@
+C51 COMPILER V9.01   TIMER                                                                 12/09/2018 10:48:22 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE TIMER
+OBJECT MODULE PLACED IN Timer.OBJ
+COMPILER INVOKED BY: E:\Keil_v4\C51\BIN\C51.EXE Timer.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include "Timer.h"
+   2          
+   3          void Timer0Init()       //106微秒@11.0592MHz
+   4          {
+   5   1              AUXR |= 0x80;   //定时器时钟1T模式
+   6   1              TMOD &= 0xF0;   //设置定时器模式
+   7   1              TMOD |= 0x01;   //设置定时器模式
+   8   1              //TL0 = 0x6C;           //设置定时初值 106
+   9   1              //TH0 = 0xFB;           //设置定时初值
+  10   1          //TL0 = 0x8D;               //设置定时初值 106us
+  11   1              //TH0 = 0xFB;           //设置定时初值
+  12   1              TL0 = (65535 - BB_FREQ)%256;            //设置定时初值 106us
+  13   1              TH0 = (65535 - BB_FREQ)/256;            //设置定时初值
+  14   1              TF0 = 0;                //清除TF0标志
+  15   1              TR0 = 1;                //定时器0开始计时
+  16   1              ET0 = 1;
+  17   1              INTCLKO = 1;    //开启定时器0分频输出
+  18   1      }
+  19          
+  20          void Timer1Init()       //10毫秒@11.0592MHz
+  21          {
+  22   1              AUXR &= 0xBF;   //定时器时钟12T模式
+  23   1              TMOD &= 0x0F;   //设置定时器模式
+  24   1              TL1 = 0x00;             //设置定时初值
+  25   1              TH1 = 0xDC;             //设置定时初值
+  26   1              TF1 = 0;                //清除TF1标志
+  27   1              TR1 = 1;                //定时器1开始计时
+  28   1              ET1 = 1;
+  29   1      
+  30   1          //设置定时器1为高优先级
+  31   1          IP  |= 0x08;
+  32   1          IPH |= 0x08;
+  33   1      }
+  34          
+  35          void Timer3Init()               //166微秒@11.0592MHz
+  36          {
+  37   1              T4T3M |= 0x02;          //定时器时钟1T模式
+  38   1              //T3L = 0xD4;               //设置定时初值 166
+  39   1              //T3H = 0xF8;               //设置定时初值
+  40   1              //T3L = 0x33;           //设置定时初值   250
+  41   1              //T3H = 0xF5;           //设置定时初值
+  42   1              //T3L = 0x9A;               //设置定时初值
+  43   1              //T3H = 0xFA;               //设置定时初值
+  44   1      //      T3L = 0xD7;             //设置定时初值    10K
+  45   1      //      T3H = 0xFD;             //设置定时初值
+  46   1              //T3L = 0x66;           //设置定时初值
+  47   1              //T3H = 0xEA;           //设置定时初值
+  48   1              T3L = 0x00;             //设置定时初值           //800Hz
+  49   1              T3H = 0xE5;             //设置定时初值
+  50   1              IE2 = 0x20;         //打开T3中断
+  51   1      }
+  52          
+  53          void StartT3()
+  54          {
+  55   1         T4T3M |= 0x08;               //定时器3开始计时
+C51 COMPILER V9.01   TIMER                                                                 12/09/2018 10:48:22 PAGE 2   
+
+  56   1      }
+  57          
+  58          void StopT3()
+  59          {
+  60   1         T4T3M &= 0xf7;               //定时器3停止计时
+  61   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     71    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

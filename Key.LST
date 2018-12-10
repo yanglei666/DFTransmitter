@@ -1,0 +1,202 @@
+C51 COMPILER V9.01   KEY                                                                   12/09/2018 10:48:22 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE KEY
+OBJECT MODULE PLACED IN Key.OBJ
+COMPILER INVOKED BY: E:\Keil_v4\C51\BIN\C51.EXE Key.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include"Key.h"
+   2          
+   3          sbit READ_KEY_A = P2^3;
+   4          sbit READ_KEY_B = P2^2;
+   5          
+   6          u16 cnt = 0;
+   7          
+   8          //IO初始化操作
+   9          void IOInit(void)
+  10          {
+  11   1         //输出口全部设置推挽输出模式
+  12   1         P0M1 = 0x00;
+  13   1         P0M0 = 0xff;
+  14   1         P1M1 = 0x00;
+  15   1         P1M0 = 0xff;
+  16   1         P3M1 = 0x1c;
+  17   1         P3M0 = 0xe2;
+  18   1         P4M1 = 0x00;
+  19   1         P4M0 = 0x10;
+  20   1         //关闭P3.2 3.3 3.4 的斯密特触发器
+  21   1         P3NCS |= 0x1c;
+  22   1      }
+  23          
+  24          //按键读取码值
+  25          unsigned char Key_Read(void)
+  26          {    
+  27   1          bit A_VAL = 0,B_VAL =0;
+  28   1              A_VAL = READ_KEY_A;
+  29   1              B_VAL = READ_KEY_B;
+  30   1          if((!A_VAL)&&(!B_VAL))  
+  31   1                      return KEY_AB_PRES;
+  32   1      
+  33   1          if(!A_VAL)  
+  34   1                  return KEY_A_PRES;
+  35   1      
+  36   1          if(!B_VAL)  
+  37   1                      return KEY_B_PRES;
+  38   1              
+  39   1              return KEY_NONE;
+  40   1      }
+  41          
+  42          //要求外部扫描周期为10ms
+  43          unsigned char Key_Scan(void)
+  44          {
+  45   1              static unsigned char state = 0;               //按键初始化状态
+  46   1              static unsigned char KEY_LAST=0;                  //记录两次电平的状态
+  47   1              unsigned char KEY_NOW=0;    
+  48   1              unsigned char KEY_VALUE=0;
+  49   1       
+  50   1              KEY_NOW = Key_Read();              //读按键值
+  51   1      
+  52   1              switch(state)
+  53   1              {
+  54   2                      case 0:
+  55   2                      {
+C51 COMPILER V9.01   KEY                                                                   12/09/2018 10:48:22 PAGE 2   
+
+  56   3                              //if(KEY_NOW != KEY_LAST)                  //有按键按下
+  57   3                              if((KEY_NOW != 0)&&(KEY_LAST == 0))        //上一次的按键如果还未松开则认为无效
+  58   3                              {
+  59   4                                 state = 1;
+  60   4                                 printf("key is press %bx \n",KEY_VALUE);
+  61   4                              }       
+  62   3                      }
+  63   2                      break;
+  64   2                      case 1: 
+  65   2                      {
+  66   3                              if((KEY_NOW == KEY_LAST)&&(KEY_NOW!=0))   //消斗之后按键有效  并且不为0
+  67   3                              {
+  68   4                                 state = 2;
+  69   4                              } 
+  70   3                              else 
+  71   3                                  state = 0;            //认为误触
+  72   3                      }
+  73   2                      break; 
+  74   2                      case 2:                       //消斗之后
+  75   2                      {
+  76   3                              if(KEY_NOW == KEY_LAST)   //还是按下的状态 
+  77   3                              {
+  78   4                                      state = 3;
+  79   4                              }
+  80   3                              else//松开了，短按
+  81   3                              {
+  82   4                                  //如果在还未松开的情况下又按了另外一个键，则按组合键重新计数
+  83   4                                  if(KEY_NOW == KEY_AB_PRES)
+  84   4                                      {
+  85   5                                           state = 0;
+  86   5                                               cnt = 0;
+  87   5                                               KEY_LAST = 0;
+  88   5                                               KEY_NOW  = 0;
+  89   5                                               KEY_VALUE = 0;
+  90   5                                               break;
+  91   5                                      }
+  92   4                                      state = 0; 
+  93   4                                      KEY_VALUE = KEY_LAST|KEY_SHORT;  //返回键值短按
+  94   4                                      //printf("key is press 2 %02x\n",KEY_VALUE);    
+  95   4                              }
+  96   3                      }
+  97   2                      break;
+  98   2                      
+  99   2                      case 3: //判断长按短按
+ 100   2                      {
+ 101   3                              cnt++;
+ 102   3                              printf("keynow is %bd keylast is %bd cnt %d\n",KEY_NOW,KEY_LAST,cnt);
+ 103   3                              if(KEY_NOW == KEY_LAST) 
+ 104   3                              {
+ 105   4                                      if(cnt > VLONG_TIME) //7000ms `
+ 106   4                                      { 
+ 107   5                                           if(KEY_NOW == KEY_AB_PRES)
+ 108   5                                               {
+ 109   6                                                  bInFreq  = 1;     //开启进入频率调节提示标志
+ 110   6                                                      bInAlarm = 0;
+ 111   6                                               }
+ 112   5                                                  
+ 113   5                                      }
+ 114   4                                      else if((cnt < VLONG_TIME)&&(cnt > LONG_TIME))        //LONG
+ 115   4                                      {
+ 116   5                                              if(KEY_NOW == KEY_AB_PRES)
+ 117   5                                              {
+C51 COMPILER V9.01   KEY                                                                   12/09/2018 10:48:22 PAGE 3   
+
+ 118   6                                                 bInAlarm = 1;         //开启进入警示调节提示标志
+ 119   6                                                 bInFreq  = 0;
+ 120   6                                              }           
+ 121   5                                      }                         
+ 122   4                              }
+ 123   3                              else
+ 124   3                              {
+ 125   4                                  //如果在还未松开的情况下又按了另外一个键，则按组合键重新计数
+ 126   4                                  if(KEY_NOW == KEY_AB_PRES)
+ 127   4                                      {
+ 128   5                                           state = 0;
+ 129   5                                               cnt = 0;
+ 130   5                                               KEY_LAST = 0;
+ 131   5                                               KEY_NOW  = 0;
+ 132   5                                               KEY_VALUE = 0;
+ 133   5                                               break;
+ 134   5                                      }
+ 135   4      
+ 136   4                                      if(cnt > VLONG_TIME) //7000ms
+ 137   4                                      { 
+ 138   5                                              state = 4;
+ 139   5                                              KEY_VALUE = KEY_LAST|KEY_VLONG; //VLONG
+ 140   5                                              //printf("key is press 31 %bx cnt %d\n",KEY_VALUE,cnt);
+ 141   5                                              cnt = 0;
+ 142   5                                      }
+ 143   4                                      else if((cnt < VLONG_TIME)&&(cnt > LONG_TIME))        //LONG
+ 144   4                                      {
+ 145   5                                              state = 0;
+ 146   5                                              KEY_VALUE = KEY_LAST|KEY_LONG; //返回键值长按
+ 147   5                                              //printf("key is press 32 %bx cnt %d\n",KEY_VALUE,cnt);
+ 148   5                                              cnt = 0; 
+ 149   5                                      }
+ 150   4                                      else
+ 151   4                                      {
+ 152   5                                              state = 0;
+ 153   5                                          KEY_VALUE = KEY_LAST|KEY_SHORT; //返回键值短按
+ 154   5                                              //printf("key is press 33 %bx cnt %d\n",KEY_VALUE,cnt);
+ 155   5                                              cnt = 0;
+ 156   5                                      }                                       
+ 157   4                              }
+ 158   3                      }
+ 159   2                      break;
+ 160   2                      case 4://长按松手检测
+ 161   2                      {
+ 162   3                              if(KEY_NOW != KEY_LAST) 
+ 163   3                              {
+ 164   4                                 state = 0;
+ 165   4                                 //printf("key is press 4\n");
+ 166   4                              }               
+ 167   3                      }
+ 168   2                      break;
+ 169   2              }
+ 170   1              KEY_LAST = KEY_NOW; //更新
+ 171   1              return KEY_VALUE;
+ 172   1      }
+ 173          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    373    ----
+   CONSTANT SIZE    =     56    ----
+   XDATA SIZE       =   ----    ----
+C51 COMPILER V9.01   KEY                                                                   12/09/2018 10:48:22 PAGE 4   
+
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      4       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       2
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
